@@ -6,7 +6,8 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - ./llama.cpp/models:/models
+      - ./models:/models
+      
     environment:
       LLAMA_ARG_MODEL: /models/llama-2-7b-chat.Q2_K.gguf
       LLAMA_ARG_CTX_SIZE: 4096
