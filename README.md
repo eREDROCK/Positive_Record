@@ -39,3 +39,7 @@ http://localhost/llama に対して以下のようなフォーマットのBody�
 ```
 {"prompt": "日本語で答えてください．アナタは誰ですか？ ","n_predict": 120}
 ```
+# リポジトリのリンク
+1月に完成することを目標に開発中です．
+以下のリンクから最新の状態をご確認いただくことができます．
+[https://github.com/eREDROCK/Positive_Record](https://github.com/eREDROCK/Positive_Record)
