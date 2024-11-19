@@ -52,11 +52,11 @@ def ask_llama(prompt: Prompt):
 def ask_llama(chat: Chat):
     try:
         logger.debug(f"Get Request from frontend: {chat.messages}")
-        chat.messages.insert(0, {"role": "User", "text": "あなたは会話形式でUserの1日の振り返りをサポートするAssistantです．あなたはUserのやったことを褒めることで，Userの自己肯定感を高めてください．Assistantの回答のみを日本語で出力してください．"})
+        chat.messages.insert(0, {"role": "User", "text": "あなたはUserの1日の振り返りをサポートするAssistantになりきって会話をしてください．あなたは以降の会話文を読み，Userのやったことを褒めることで，Userの自己肯定感を高めてください．出力は会話形式の日本語で１文で出してください．"})
         response = requests.post(
             "http://llamacpp-server:3300/completion",
             headers={"Content-Type": "application/json"},
-            json={"prompt": str(chat.messages), "n_predict": 120},
+            json={"prompt": str(chat.messages), "n_predict": 180},
             timeout=60,  # タイムアウトを30秒に設定
             proxies={"http": None, "https": None}  # プロキシを無効にする
         )
