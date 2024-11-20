@@ -9,6 +9,14 @@ import  re
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 class Prompt(BaseModel):
     prompt: str
     n_predict: int
