@@ -6,6 +6,7 @@ import requests
 import logging
 import json
 import  re
+import os
 
 app = FastAPI()
 
@@ -36,7 +37,6 @@ logger = logging.getLogger(__name__)
 def ask_llama(prompt: Prompt):
     try:
         logger.debug(f"Sending request to llamacpp-server with prompt: {prompt.prompt}")
-        
         response = requests.post(
             "http://llamacpp-server:3300/completion",
             headers={"Content-Type": "application/json"},
@@ -61,25 +61,52 @@ def ask_llama(prompt: Prompt):
 def ask_llama(chat: Chat):
     try:
         logger.debug(f"Get Request from frontend: {chat.messages}")
-        chat.messages.insert(0, {"role": "Assistant", "text": "私はUserの1日の振り返りをサポートするAssistantです．私はUserとの会話の中でUserがやったことを褒め，Userの自己肯定感を高めます．出力は以降の会話に続くAsasistantである私の発言のみとします．"})
+
+        # chatPrompt.txtを読み込む
+        file_path = os.path.join(os.path.dirname(__file__), 'chatPrompt.txt')
+        with open(file_path, 'r', encoding='utf-8') as file:
+            prompt_data = json.load(file)
+
+        # Messageオブジェクトを辞書に変換する関数
+        def messageObj_to_dict(message):
+            return {
+                "role": message.role,
+                "text": message.text
+            }
+
+        # chat.messagesの各Messageオブジェクトを辞書型に変換
+        chat_messages_dict = [messageObj_to_dict(message) for message in chat.messages]
+        
+        # txtから読み込んだプロンプトとフロントエンドからの入力を結合
+        chat.messages=prompt_data+chat_messages_dict
+        message_txt=""
+        for message in chat.messages:
+            if message['role'] == "User":
+                message_txt= message_txt + message["text"] + "\n"
+            else:
+                message_txt= message_txt + "A: "+ message["text"] + "\n"
+        message_txt=message_txt+"A: "
+
+        # lamacpp-serverにプロンプトを送信
         response = requests.post(
             "http://llamacpp-server:3300/completion",
             headers={"Content-Type": "application/json"},
-            json={"prompt": str(chat.messages), "n_predict": 200},
+            json={"prompt": str(message_txt), "n_predict": 200},
             timeout=90,  # タイムアウトを30秒に設定
             proxies={"http": None, "https": None}  # プロキシを無効にする
         )
         response.raise_for_status()  # ステータスコードが200番台でない場合に例外を発生させる
         logger.debug(f"Received response from llamacpp-server: {response.text}")
 
-        # 正規表現で`text:`の直後の日本語部分を抽出
-        match = re.search(r"text': '([^']+)", response.text)
-        extracted_text = match.group(1) if match else None
-
-        if extracted_text:
-            logger.info(f"Extracted text: {extracted_text}")
+        # レスポンスのcontentの文字列の最初の改行までを取得(Userへの返答文のみ取得)
+        response_json = response.json()
+        response_content = response_json.get("content", "")
+        # レスポンスのcontentの文字列の最初の開業までを取得
+        extracted_text = response_content.split("\n")[0]
 
         return {"original_response": response.json(), "extracted_text": extracted_text}
+    
+    # 例外処理
     except requests.exceptions.Timeout:
         logger.error("Request to llamacpp-server timed out")
         raise HTTPException(status_code=504, detail="Request to llamacpp-server timed out")
