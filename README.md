@@ -18,6 +18,7 @@ LLMの機能のみを持つLLMサーバー
 
 - ルートディレクトリにmodelsフォルダを追加
 - 追加したmodelsフォルダに任意のGGUF形式のモデルを配置(モデルはこの[リンク](https://huggingface.co/TheBloke)から探して下さい)
+- 現在使っている日本語モデルはこれ[リンク](https://huggingface.co/mmnga/ELYZA-japanese-Llama-2-7b-instruct-gguf)
 - .envのMODEL_NAMEをダウンロードしたモデル名に変更
 ## 起動方法
 - ルートディレクトリに移動
@@ -39,3 +40,7 @@ http://localhost/llama に対して以下のようなフォーマットのBody�
 ```
 {"prompt": "日本語で答えてください．アナタは誰ですか？ ","n_predict": 120}
 ```
+# リポジトリのリンク
+1月に完成することを目標に開発中です．
+以下のリンクから最新の状態をご確認いただくことができます．
+[https://github.com/eREDROCK/Positive_Record](https://github.com/eREDROCK/Positive_Record)

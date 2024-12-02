@@ -1,10 +1,10 @@
-version: "3"
+version: "3.9"
 
 services:
   llamacpp-server:
     image: ghcr.io/ggerganov/llama.cpp:server
     ports:
-      - 8080:8080
+      - 3300:3300
     volumes:
       - ./models:/models
       
@@ -16,7 +16,7 @@ services:
       LLAMA_ARG_PORT: 8080
     tty: true
     command: >
-       -m models/${MODEL_NAME} -c 512 --host 0.0.0.0 --port 8080
+       -m models/${MODEL_NAME} -c 512 --host 0.0.0.0 --port 3300
 
   backend:
     build: ./backend
@@ -28,7 +28,7 @@ services:
       - llamacpp-server
     tty: true
     command: >
-       uvicorn app.main:app --host 0.0.0.0 --port 80
+       uvicorn app.main:app --reload --host 0.0.0.0 --port 80
   
   frontend:
     build: ./frontend
@@ -39,7 +39,7 @@ services:
       - 3000:3000
     tty: true
     command: >
-       npm start
+      sh -c "npm install && npm start"
     environment:
       CHOKIDAR_USEPOLLING: "true"
 
