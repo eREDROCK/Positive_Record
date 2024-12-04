@@ -87,6 +87,8 @@ def ask_llama(chat: Chat):
                 message_txt= message_txt + "A: "+ message["text"] + "\n"
         message_txt=message_txt+"A: "
 
+        logger.debug(f"prompt: {message_txt}")
+        
         # lamacpp-serverにプロンプトを送信
         response = requests.post(
             "http://llamacpp-server:3300/completion",
@@ -118,20 +120,25 @@ def ask_llama(chat: Chat):
         raise HTTPException(status_code=502, detail="Invalid JSON response from llamacpp-server")
 
     
-@app.post("/diary")
+@app.post("/userDiary")
 def ask_llama(chat: Chat):
     try:
-        logger.debug(f"Get Request from frontend: {chat.messages}")
-        chat.messages.append({"role": "User", "text": "以上の会話の内容を踏まえ，Userが今日一日で取り組んだことを日記の形式にしてまとめてください．"})
-        response = requests.post(
-            "http://llamacpp-server:3300/completion",
-            headers={"Content-Type": "application/json"},
-            json={"prompt": str(chat.messages), "n_predict": 180},
-            timeout=60,  # タイムアウトを30秒に設定
-            proxies={"http": None, "https": None}  # プロキシを無効にする
-        )
-        response.raise_for_status()  # ステータスコードが200番台でない場合に例外を発生させる
-        logger.debug(f"Received response from llamacpp-server: {response.text}")
+        # ユーザーの入力を元にLLMを使わずに日記を生成する　
+        return response.json()
+    except requests.exceptions.Timeout:
+        logger.error("Request to llamacpp-server timed out")
+        raise HTTPException(status_code=504, detail="Request to llamacpp-server timed out")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"RequestException: {e}")
+        raise HTTPException(status_code=500, detail="Service unavailable or request failed")
+    except requests.exceptions.JSONDecodeError as e:
+        logger.error(f"JSONDecodeError: {e}")
+        raise HTTPException(status_code=502, detail="Invalid JSON response from llamacpp-server")
+    
+@app.post("/LLMReview")
+def ask_llama(chat: Chat):
+    try:
+        # LLMによる今日1日のユーザーの行動に対する評価の文章を生成　
         return response.json()
     except requests.exceptions.Timeout:
         logger.error("Request to llamacpp-server timed out")
