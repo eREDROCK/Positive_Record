@@ -131,6 +131,9 @@ function App() {
       <header>
         ポジレコ
       </header>
+      <div className='chatHeader'>
+        今日の出来事を話してみましょう！
+      </div>
       <div className="chat">
         <button onClick={handleDiaryButtonClick}>
           日記生成
