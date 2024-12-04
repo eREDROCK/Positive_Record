@@ -10,7 +10,7 @@ body {
   /* 背景色を水色に */
   border-radius: 16px;
   padding: 20px;
-  min-height: calc(100vh - 20px);
+  height: calc(100vh - 20px);
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
@@ -38,8 +38,8 @@ header {
   display: flex;
   flex-direction: column;
   gap: 30px;
-  margin-bottom: 20px;
-  max-height: calc(100vh - 160px);
+  margin-bottom: 60px;
+  max-height: calc(100vh - 250px);
   /* 画面全体の高さから他の要素の高さを引いた値 */
   overflow-y: auto;
   /* スクロールを有効にする */
