@@ -1,11 +1,16 @@
+body {
+  padding: 10px;
+  background-color: black;
+}
+
 .App {
-  width: 600px;
+  width: min(90vw, 600px);
   margin: 0 auto;
   background-color: #e0f7fa;
   /* 背景色を水色に */
   border-radius: 16px;
   padding: 20px;
-  min-height: 100vh;
+  height: calc(100vh - 20px);
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
@@ -18,12 +23,23 @@ header {
   font-size: 2em;
 }
 
+.chatHeader {
+  background-color: white;
+  text-align: center;
+
+  font-size: large;
+
+  padding-top: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
 .chat {
   display: flex;
   flex-direction: column;
   gap: 30px;
-  margin-bottom: 20px;
-  max-height: calc(100vh - 160px);
+  margin-bottom: 60px;
+  max-height: calc(100vh - 250px);
   /* 画面全体の高さから他の要素の高さを引いた値 */
   overflow-y: auto;
   /* スクロールを有効にする */
@@ -61,9 +77,9 @@ header {
 .output,
 .input {
   max-width: 400px;
-  padding: 10px;
+  padding: 20px;
   box-sizing: border-box;
-  border-radius: 32px;
+  border-radius: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -160,4 +176,46 @@ header {
 
 .form button:active {
   box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+}
+
+.left-loading {
+  width: calc(100% - 30px);
+  margin-left: 30px;
+  text-align: left;
+}
+
+.left-loading,
+.center-loading {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+/* HTML: <div class="loader"></div> */
+.loader {
+  width: 15px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  animation: l5 1s infinite linear alternate;
+}
+
+@keyframes l5 {
+  0% {
+    box-shadow: 20px 0 #000, -20px 0 #0002;
+    background: #000
+  }
+
+  33% {
+    box-shadow: 20px 0 #000, -20px 0 #0002;
+    background: #0002
+  }
+
+  66% {
+    box-shadow: 20px 0 #0002, -20px 0 #000;
+    background: #0002
+  }
+
+  100% {
+    box-shadow: 20px 0 #0002, -20px 0 #000;
+    background: #000
+  }
 }

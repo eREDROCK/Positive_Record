@@ -22,6 +22,22 @@ function App() {
     return messages;
   };
 
+  const addLoadingElement = (className) => {
+    const chatElement = document.querySelector('.chat');
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = className;
+    loadingDiv.innerHTML = '<div class="loader"></div>';
+    chatElement.insertBefore(loadingDiv, chatElement.querySelector('button'));
+  };
+
+  const removeLoadingElement = (className) => {
+    const chatElement = document.querySelector('.chat');
+    const loadingDiv = chatElement.querySelector(`.${className}`);
+    if (loadingDiv) {
+      chatElement.removeChild(loadingDiv);
+    }
+  };
+
   const handleChatButtonClick = async (event) => {
     event.preventDefault(); // フォームのデフォルトの送信動作を防ぐ
     setIsDisabled(true);
@@ -38,6 +54,9 @@ function App() {
     newInputDiv.className = 'input';
     newInputDiv.textContent = inputText;
     chatElement.insertBefore(newInputDiv, chatElement.querySelector('button'));
+
+    // ローディング要素を追加
+    addLoadingElement('left-loading');
 
     // inputの文字を消す
     setInputText('');
@@ -56,13 +75,16 @@ function App() {
 
     const result = await response.json();
 
+    // ローディング要素を削除
+    removeLoadingElement('left-loading');
+
     // chatにclass=outputのdivを作成して、その中にあるtextContentをサーバーからの回答にする
     const newOutputDiv = document.createElement('div');
     newOutputDiv.className = 'output';
     newOutputDiv.textContent = result.extracted_text; // サーバーからの回答を設定
     chatElement.insertBefore(newOutputDiv, chatElement.querySelector('button'));
 
-    // inputとbuttonを使えるようにする
+    // inputとbutton���使えるようにする
     inputElement.disabled = false;
     buttonElement.disabled = false;
     setIsDisabled(false);
@@ -84,6 +106,9 @@ function App() {
     const diaryButton = document.querySelector('.chat button');
     diaryButton.style.display = 'none';
 
+    // ローディング要素を追加
+    addLoadingElement('center-loading');
+
     // chatクラスの中のinputとoutputクラスをすべて結合してmessagesを作成
     const chatElement = document.querySelector('.chat');
     const messages = extractMessages();
@@ -98,6 +123,9 @@ function App() {
     });
 
     const result = await response.json();
+
+    // ローディング要素を削除
+    removeLoadingElement('center-loading');
 
     // chatにdivを生成、中にh2とpを作成
     const diaryDiv = document.createElement('div');
@@ -131,10 +159,14 @@ function App() {
       <header>
         ポジレコ
       </header>
+      <div className='chatHeader'>
+        今日の出来事を話してみましょう！
+      </div>
       <div className="chat">
         <button onClick={handleDiaryButtonClick}>
           日記生成
         </button>
+
       </div>
       <form className="form" onSubmit={handleChatButtonClick}>
         <input
