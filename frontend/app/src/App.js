@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 function App() {
   const [inputText, setInputText] = useState('');
   const [isDisabled, setIsDisabled] = useState(false);
+  const [mode, setMode] = useState('joshi'); // 初期値を設定
 
   useEffect(() => {
     // ページ読み込み時にinputにフォーカスを当てる
@@ -70,7 +71,7 @@ function App() {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({ messages, mode }), // modeを追加
     });
 
     const result = await response.json();
@@ -84,7 +85,7 @@ function App() {
     newOutputDiv.textContent = result.extracted_text; // サーバーからの回答を設定
     chatElement.insertBefore(newOutputDiv, chatElement.querySelector('button'));
 
-    // inputとbutton���使えるようにする
+    // inputとbuttonを使えるようにする
     inputElement.disabled = false;
     buttonElement.disabled = false;
     setIsDisabled(false);
@@ -119,7 +120,7 @@ function App() {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({ messages, mode }), // modeを追加
     });
 
     const result = await response.json();
@@ -157,7 +158,16 @@ function App() {
   return (
     <div className="App">
       <header>
-        ポジレコ
+        <h1>
+          ポジレコ
+        </h1>
+        <div>
+          モード：
+          <select className="mode-dropdown" value={mode} onChange={(e) => setMode(e.target.value)}>
+            <option value="joshi">上司</option>
+            <option value="buka">部下</option>
+          </select>
+        </div>
       </header>
       <div className='chatHeader'>
         今日の出来事を話してみましょう！

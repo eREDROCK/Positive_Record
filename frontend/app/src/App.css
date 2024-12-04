@@ -20,7 +20,25 @@ body {
 header {
   text-align: center;
   height: 75px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+header h1 {
+  margin: 0;
   font-size: 2em;
+  flex: 1;
+  text-align: center;
+}
+
+header div {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  position: absolute;
+  right: 0;
 }
 
 .chatHeader {
@@ -66,7 +84,7 @@ header {
 
 .chat button:hover {
   background-color: #009900;
-  /* ホバー時の色を少し濃くする */
+  /* ホバー時の色を��し濃くする */
 }
 
 .chat button:active {
