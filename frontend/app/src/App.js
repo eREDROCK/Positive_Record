@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 function App() {
   const [inputText, setInputText] = useState('');
   const [isDisabled, setIsDisabled] = useState(false);
-  const [mode, setMode] = useState('joshi'); // 初期値を設定
+  const [mode, setMode] = useState('Boss'); // 初期値を設定
 
   useEffect(() => {
     // ページ読み込み時にinputにフォーカスを当てる
@@ -21,22 +21,6 @@ function App() {
       });
     });
     return messages;
-  };
-
-  const addLoadingElement = (className) => {
-    const chatElement = document.querySelector('.chat');
-    const loadingDiv = document.createElement('div');
-    loadingDiv.className = className;
-    loadingDiv.innerHTML = '<div class="loader"></div>';
-    chatElement.insertBefore(loadingDiv, chatElement.querySelector('button'));
-  };
-
-  const removeLoadingElement = (className) => {
-    const chatElement = document.querySelector('.chat');
-    const loadingDiv = chatElement.querySelector(`.${className}`);
-    if (loadingDiv) {
-      chatElement.removeChild(loadingDiv);
-    }
   };
 
   const handleChatButtonClick = async (event) => {
@@ -57,7 +41,10 @@ function App() {
     chatElement.insertBefore(newInputDiv, chatElement.querySelector('button'));
 
     // ローディング要素を追加
-    addLoadingElement('left-loading');
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'left-loading';
+    loadingDiv.innerHTML = '<div class="loader"></div>';
+    chatElement.insertBefore(loadingDiv, chatElement.querySelector('button'));
 
     // inputの文字を消す
     setInputText('');
@@ -77,7 +64,7 @@ function App() {
     const result = await response.json();
 
     // ローディング要素を削除
-    removeLoadingElement('left-loading');
+    chatElement.removeChild(loadingDiv);
 
     // chatにclass=outputのdivを作成して、その中にあるtextContentをサーバーからの回答にする
     const newOutputDiv = document.createElement('div');
@@ -98,7 +85,7 @@ function App() {
     diaryButton.style.display = 'block';
   };
 
-  const handleDiaryButtonClick = async () => {
+  const handleDiaryButtonClick = () => {
     // formを消す
     const formElement = document.querySelector('.form');
     formElement.style.display = 'none';
@@ -107,52 +94,72 @@ function App() {
     const diaryButton = document.querySelector('.chat button');
     diaryButton.style.display = 'none';
 
-    // ローディング要素を追加
-    addLoadingElement('center-loading');
-
-    // chatクラスの中のinputとoutputクラスをすべて結合してmessagesを作成
+    // chat内に要素を作成
     const chatElement = document.querySelector('.chat');
-    const messages = extractMessages();
+    chatElement.innerHTML = ''; // 既存の内容をクリア
 
-    // localhost/diaryにPOSTリクエストを送信
-    const response = await fetch('http://localhost/diary', {
+    const diaryDiv = document.createElement('div');
+    diaryDiv.className = 'diary';
+
+    const dateHeader = document.createElement('h1');
+    const today = new Date();
+    const formattedDate = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日の日記`;
+    dateHeader.textContent = formattedDate;
+    diaryDiv.appendChild(dateHeader);
+
+    const todayHeader = document.createElement('h2');
+    todayHeader.textContent = 'きょうやったこと';
+    diaryDiv.appendChild(todayHeader);
+
+    const loading1 = document.createElement('div');
+    loading1.className = 'center-loading';
+    loading1.innerHTML = '<div class="loader"></div>'; // 中身を変更
+    diaryDiv.appendChild(loading1);
+
+    const reviewHeader = document.createElement('h2');
+    reviewHeader.textContent = 'ふりかえり';
+    diaryDiv.appendChild(reviewHeader);
+
+    const loading2 = document.createElement('div');
+    loading2.className = 'center-loading';
+    loading2.innerHTML = '<div class="loader"></div>'; // 中身を変更
+    diaryDiv.appendChild(loading2);
+
+    chatElement.appendChild(diaryDiv);
+
+    // messagesとmodeのオブジェクトを作成
+    const messages = extractMessages();
+    const requestBody = { messages, mode };
+
+    // userDiaryにPOSTリクエストを送信
+    fetch('http://localhost/userDiary', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ messages, mode }), // modeを追加
-    });
+      body: JSON.stringify(requestBody),
+    })
+      .then(response => response.json())
+      .then(userDiaryResult => {
+        // ローディング1のclassを消して、text-contentを結果.user_diaryの文字列を反映
+        loading1.classList.remove('center-loading');
+        loading1.textContent = userDiaryResult.user_diary;
+      });
 
-    const result = await response.json();
-
-    // ローディング要素を削除
-    removeLoadingElement('center-loading');
-
-    // chatにdivを生成、中にh2とpを作成
-    const diaryDiv = document.createElement('div');
-    diaryDiv.className = 'diary';
-
-    const diaryTitle = document.createElement('h2');
-    const today = new Date();
-    const formattedDate = `${today.getFullYear()}年${String(today.getMonth() + 1).padStart(2, '0')}月${String(today.getDate()).padStart(2, '0')}日`;
-    diaryTitle.textContent = formattedDate;
-
-    const diaryContent = document.createElement('p');
-    diaryContent.innerHTML = result.content; // サーバーからの回答を設定
-
-    diaryDiv.appendChild(diaryTitle);
-    diaryDiv.appendChild(diaryContent);
-    chatElement.appendChild(diaryDiv);
-
-    // ダウンロードリンクを作成してクリック
-    const downloadLink = document.createElement('a');
-    const diaryText = diaryContent.innerHTML.replace(/<br>/g, '\n'); // <br>を改行に変換
-    const blob = new Blob([diaryText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    downloadLink.href = url;
-    downloadLink.download = `${formattedDate}.txt`;
-    downloadLink.click();
-    URL.revokeObjectURL(url); // メモリを解放
+    // LLMReviewにPOSTリクエストを送信
+    fetch('http://localhost/LLMReview', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody),
+    })
+      .then(response => response.json())
+      .then(llmReviewResult => {
+        // ローディング2のclassを消して、text-contentをllm_reviewの文字列を反映
+        loading2.classList.remove('center-loading');
+        loading2.textContent = llmReviewResult.llm_review;
+      });
   };
 
   return (
@@ -165,9 +172,9 @@ function App() {
           モード：
           <select className="mode-dropdown" value={mode} onChange={(e) => setMode(e.target.value)}>
             <option value="Boss">上司</option>
-            <option value="Friend">友人</option>
+            <option value="Friend">親友</option>
             <option value="Commander">指揮官</option>
-            <option value="Lady">女性</option>
+            <option value="Lady">お嬢様</option>
           </select>
         </div>
       </header>
@@ -178,7 +185,6 @@ function App() {
         <button onClick={handleDiaryButtonClick}>
           日記生成
         </button>
-
       </div>
       <form className="form" onSubmit={handleChatButtonClick}>
         <input

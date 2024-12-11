@@ -152,7 +152,7 @@ def ask_llama(chat: Chat):
 def ask_llama(chat: Chat):
     try:
         # LLMによる今日1日のユーザーの行動に対する評価の文章を生成　
-        time.sleep(5)
+        time.sleep(20)
         return {"llm_review": "朝から家の掃除をするのは難しいことですね．そしてちゃんと授業にも出席できています．当たり前を当たり前にこなすことは難しいことですからね．"}
     except requests.exceptions.Timeout:
         logger.error("Request to llamacpp-server timed out")

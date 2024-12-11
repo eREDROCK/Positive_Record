@@ -200,12 +200,19 @@ header div {
   width: calc(100% - 30px);
   margin-left: 30px;
   text-align: left;
-}
 
-.left-loading,
-.center-loading {
   margin-top: 5px;
   margin-bottom: 5px;
+}
+
+.center-loading {
+  width: 100%;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+
+  margin-top: 50px;
+  margin-bottom: 50px;
 }
 
 /* HTML: <div class="loader"></div> */
