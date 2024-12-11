@@ -28,6 +28,7 @@ class Message(BaseModel):
 
 class Chat(BaseModel):
     messages: list[Message]
+    mode: str
 
 # ログ設定
 logging.basicConfig(level=logging.DEBUG)
@@ -60,10 +61,20 @@ def ask_llama(prompt: Prompt):
 @app.post("/chat")
 def ask_llama(chat: Chat):
     try:
+        # ユーザーの入力に対し，指定したAIのmodeに沿ってユーザーを褒めながら返答を生成する
         logger.debug(f"Get Request from frontend: {chat.messages}")
 
+        if chat.mode =="Boss":
+            file_path = os.path.join(os.path.dirname(__file__), 'prompts/BossPrompt.txt')
+        elif chat.mode =="Friend":
+            file_path = os.path.join(os.path.dirname(__file__), 'prompts/FriendPrompt.txt')
+        elif chat.mode =="Commander":
+            file_path = os.path.join(os.path.dirname(__file__), 'prompts/CommanderPrompt.txt')
+        elif chat.mode =="Lady":
+            file_path = os.path.join(os.path.dirname(__file__), 'prompts/LadyPrompt.txt')
+ 
+
         # chatPrompt.txtを読み込む
-        file_path = os.path.join(os.path.dirname(__file__), 'chatPrompt.txt')
         with open(file_path, 'r', encoding='utf-8') as file:
             prompt_data = json.load(file)
 
@@ -103,7 +114,7 @@ def ask_llama(chat: Chat):
         # レスポンスのcontentの文字列の最初の改行までを取得(Userへの返答文のみ取得)
         response_json = response.json()
         response_content = response_json.get("content", "")
-        # レスポンスのcontentの文字列の最初の開業までを取得
+        # レスポンスのcontentの文字列の最初の改行までを取得
         extracted_text = response_content.split("\n")[0]
 
         return {"original_response": response.json(), "extracted_text": extracted_text}
