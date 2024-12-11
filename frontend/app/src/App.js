@@ -164,8 +164,10 @@ function App() {
         <div>
           モード：
           <select className="mode-dropdown" value={mode} onChange={(e) => setMode(e.target.value)}>
-            <option value="joshi">上司</option>
-            <option value="buka">部下</option>
+            <option value="Boss">上司</option>
+            <option value="Friend">友人</option>
+            <option value="Commander">指揮官</option>
+            <option value="Lady">女性</option>
           </select>
         </div>
       </header>
