@@ -1,6 +1,11 @@
 import './App.css';
 import { useState, useEffect } from 'react';
 
+import Boss from './img/Boss.png';
+import Commander from './img/Commander.png';
+import Friend from './img/Friend.png';
+import Lady from './img/Lady.png';
+
 function App() {
   const [inputText, setInputText] = useState('');
   const [isDisabled, setIsDisabled] = useState(false);
@@ -161,8 +166,45 @@ function App() {
       });
   };
 
+  const handleModeSelect = (event) => {
+    setMode(event.currentTarget.id);
+    document.querySelector('.top-div').style.display = 'none';
+  };
+
   return (
     <div className="App">
+      <div className="top-div">
+        <h1>ポジレコ</h1>
+        <h2>モードを選択してね</h2>
+        <div className="mode-select" id="Boss" onClick={handleModeSelect}>
+          <img src={Boss} />
+          <div className='mode-select-text'>
+            <h3>上司</h3>
+            <p>あいうえおかきくけこさしすせそたちつてと</p>
+          </div>
+        </div>
+        <div className="mode-select" id="Commander" onClick={handleModeSelect}>
+          <img src={Commander} />
+          <div className='mode-select-text'>
+            <h3>指揮官</h3>
+            <p>あいうえおかきくけこさしすせそたちつてと</p>
+          </div>
+        </div>
+        <div className="mode-select" id="Friend" onClick={handleModeSelect}>
+          <img src={Friend} />
+          <div className='mode-select-text'>
+            <h3>親友</h3>
+            <p>あいうえおかきくけこさしすせそたちつてと</p>
+          </div>
+        </div>
+        <div className="mode-select" id="Lady" onClick={handleModeSelect}>
+          <img src={Lady} />
+          <div className='mode-select-text'>
+            <h3>お嬢様</h3>
+            <p>あいうえおかきくけこさしすせそたちつてと</p>
+          </div>
+        </div>
+      </div>
       <header>
         <h1>
           ポジレコ
