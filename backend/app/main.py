@@ -135,7 +135,7 @@ def ask_llama(chat: Chat):
 def ask_llama(chat: Chat):
     try:
         # ユーザーの入力を元にLLMを使わずに日記を生成する　
-        return response.json()
+        return {"user_diary": "今日は家の掃除をした．次に授業に出席した．"}
     except requests.exceptions.Timeout:
         logger.error("Request to llamacpp-server timed out")
         raise HTTPException(status_code=504, detail="Request to llamacpp-server timed out")
@@ -150,7 +150,7 @@ def ask_llama(chat: Chat):
 def ask_llama(chat: Chat):
     try:
         # LLMによる今日1日のユーザーの行動に対する評価の文章を生成　
-        return response.json()
+        return {"llm_review": "朝から家の掃除をするのは難しいことですね．そしてちゃんと授業にも出席できています．当たり前を当たり前にこなすことは難しいことですからね．"}
     except requests.exceptions.Timeout:
         logger.error("Request to llamacpp-server timed out")
         raise HTTPException(status_code=504, detail="Request to llamacpp-server timed out")
