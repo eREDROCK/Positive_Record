@@ -96,7 +96,6 @@ function App() {
 
     // chat内に要素を作成
     const chatElement = document.querySelector('.chat');
-    chatElement.innerHTML = ''; // 既存の内容をクリア
 
     const diaryDiv = document.createElement('div');
     diaryDiv.className = 'diary';
