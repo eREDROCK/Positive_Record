@@ -65,13 +65,13 @@ def ask_llama(chat: Chat):
         logger.debug(f"Get Request from frontend: {chat.messages}")
 
         if chat.mode =="Boss":
-            file_path = os.path.join(os.path.dirname(__file__), 'prompts/BossPrompt.txt')
+            file_path = os.path.join(os.path.dirname(__file__), 'prompts/boss_prompt.txt')
         elif chat.mode =="Friend":
-            file_path = os.path.join(os.path.dirname(__file__), 'prompts/FriendPrompt.txt')
+            file_path = os.path.join(os.path.dirname(__file__), 'prompts/friend_prompt.txt')
         elif chat.mode =="Commander":
-            file_path = os.path.join(os.path.dirname(__file__), 'prompts/CommanderPrompt.txt')
+            file_path = os.path.join(os.path.dirname(__file__), 'prompts/commander_prompt.txt')
         elif chat.mode =="Lady":
-            file_path = os.path.join(os.path.dirname(__file__), 'prompts/LadyPrompt.txt')
+            file_path = os.path.join(os.path.dirname(__file__), 'prompts/lady_prompt.txt')
  
 
         # chatPrompt.txtを読み込む
