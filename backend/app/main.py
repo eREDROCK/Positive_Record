@@ -105,7 +105,7 @@ def ask_llama(chat: Chat):
             "http://llamacpp-server:3300/completion",
             headers={"Content-Type": "application/json"},
             json={"prompt": str(message_txt), "n_predict": 200},
-            timeout=90,  # タイムアウトを30秒に設定
+            timeout=90,  # タイムアウトを90秒に設定
             proxies={"http": None, "https": None}  # プロキシを無効にする
         )
         response.raise_for_status()  # ステータスコードが200番台でない場合に例外を発生させる
