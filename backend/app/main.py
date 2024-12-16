@@ -73,7 +73,7 @@ def ask_llama(chat: Chat):
             file_path = os.path.join(os.path.dirname(__file__), 'prompts/commander_prompt.txt')
         elif chat.mode =="Lady":
             file_path = os.path.join(os.path.dirname(__file__), 'prompts/lady_prompt.txt')
- 
+
 
         # chatPrompt.txtを読み込む
         with open(file_path, 'r', encoding='utf-8') as file:
@@ -154,6 +154,36 @@ def ask_llama(chat: Chat):
         # LLMによる今日1日のユーザーの行動に対する評価の文章を生成　
         time.sleep(20)
         return {"llm_review": "朝から家の掃除をするのは難しいことですね．そしてちゃんと授業にも出席できています．当たり前を当たり前にこなすことは難しいことですからね．"}
+    except requests.exceptions.Timeout:
+        logger.error("Request to llamacpp-server timed out")
+        raise HTTPException(status_code=504, detail="Request to llamacpp-server timed out")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"RequestException: {e}")
+        raise HTTPException(status_code=500, detail="Service unavailable or request failed")
+    except requests.exceptions.JSONDecodeError as e:
+        logger.error(f"JSONDecodeError: {e}")
+        raise HTTPException(status_code=502, detail="Invalid JSON response from llamacpp-server")
+    
+@app.post("/Diary")
+def ask_llama(chat: Chat):
+    try:
+        # ユーザーの入力をまとめて1つのプロンプトにする
+        prompt = "\n".join([message.text for message in chat.messages])
+        
+        # llamacpp-server にリクエストを送信
+        response = requests.post(
+            "http://llamacpp-server:3300/completion",
+            json={"prompt": prompt, "n_predict": 100}
+        )
+        response.raise_for_status()
+        llama_response = response.json()
+        
+        # LLM の応答を元に日記を生成
+        if "response" in llama_response:
+            diary = f"LLMの応答: {llama_response['response']}"
+        else:
+            diary = "LLMからの応答がありませんでした。"
+        return {"diary": diary}
     except requests.exceptions.Timeout:
         logger.error("Request to llamacpp-server timed out")
         raise HTTPException(status_code=504, detail="Request to llamacpp-server timed out")
