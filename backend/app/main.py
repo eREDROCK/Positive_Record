@@ -173,16 +173,18 @@ def ask_llama(chat: Chat):
         # llamacpp-server にリクエストを送信
         response = requests.post(
             "http://llamacpp-server:3300/completion",
-            json={"prompt": prompt, "n_predict": 100}
+            json={"prompt": prompt, "n_predict": 300}
         )
         response.raise_for_status()
         llama_response = response.json()
-        
+        print("llamacpp-server response:", llama_response)
+ 
         # LLM の応答を元に日記を生成
-        if "response" in llama_response:
-            diary = f"LLMの応答: {llama_response['response']}"
+        if "content" in llama_response:
+            diary = f"LLMの応答: {llama_response['content']}"
         else:
             diary = "LLMからの応答がありませんでした。"
+
         return {"diary": diary}
     except requests.exceptions.Timeout:
         logger.error("Request to llamacpp-server timed out")
