@@ -2,6 +2,7 @@ from typing import Union
 from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from typing import List
 import requests
 import logging
 import json
@@ -30,6 +31,9 @@ class Message(BaseModel):
 class Chat(BaseModel):
     messages: list[Message]
     mode: str
+class Diary(BaseModel):
+    instruction: str
+    user_input: List[str]
 
 # ログ設定
 logging.basicConfig(level=logging.DEBUG)
@@ -165,33 +169,39 @@ def ask_llama(chat: Chat):
         raise HTTPException(status_code=502, detail="Invalid JSON response from llamacpp-server")
     
 @app.post("/Diary")
-def ask_llama(chat: Chat):
+def ask_llama(diary: Diary):
     try:
-        # ユーザーの入力をまとめて1つのプロンプトにする
-        prompt = "\n".join([message.text for message in chat.messages])
-        
+        # ユーザー入力を自然なテキスト形式に構築
+        prompt = f"{diary.instruction}\n\n"  # 指示部分
+        for item in diary.user_input:
+            prompt += f"- {item}\n"
+
         # llamacpp-server にリクエストを送信
         response = requests.post(
             "http://llamacpp-server:3300/completion",
-            json={"prompt": prompt, "n_predict": 300}
+            json={"prompt": prompt, "n_predict": 300},  # 300から100に減らす
+            #timeout=120
         )
         response.raise_for_status()
         llama_response = response.json()
-        print("llamacpp-server response:", llama_response)
- 
-        # LLM の応答を元に日記を生成
-        if "content" in llama_response:
-            diary = f"LLMの応答: {llama_response['content']}"
-        else:
-            diary = "LLMからの応答がありませんでした。"
 
-        return {"diary": diary}
+        # レスポンス内容を取得
+        content = llama_response.get("content", "").strip()
+
+        if not content:
+            raise ValueError("Empty response from Llama server")
+
+        return {"diary": content}
+
     except requests.exceptions.Timeout:
         logger.error("Request to llamacpp-server timed out")
         raise HTTPException(status_code=504, detail="Request to llamacpp-server timed out")
     except requests.exceptions.RequestException as e:
         logger.error(f"RequestException: {e}")
         raise HTTPException(status_code=500, detail="Service unavailable or request failed")
-    except requests.exceptions.JSONDecodeError as e:
-        logger.error(f"JSONDecodeError: {e}")
-        raise HTTPException(status_code=502, detail="Invalid JSON response from llamacpp-server")
+    except ValueError as e:
+        logger.error(f"Response error: {e}")
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        logger.error(f"Unhandled exception: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
