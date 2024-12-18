@@ -180,28 +180,28 @@ function App() {
           <img src={Boss} />
           <div className='mode-select-text'>
             <h3>上司</h3>
-            <p>あいうえおかきくけこさしすせそたちつてと</p>
+            <p>あなたの上司として、今日したことを褒めてくれるモード</p>
           </div>
         </div>
         <div className="mode-select" id="Commander" onClick={handleModeSelect}>
           <img src={Commander} />
           <div className='mode-select-text'>
             <h3>指揮官</h3>
-            <p>あいうえおかきくけこさしすせそたちつてと</p>
+            <p>あなたの訓練教官として、あなたを鼓舞してくれるモード</p>
           </div>
         </div>
         <div className="mode-select" id="Friend" onClick={handleModeSelect}>
           <img src={Friend} />
           <div className='mode-select-text'>
             <h3>親友</h3>
-            <p>あいうえおかきくけこさしすせそたちつてと</p>
+            <p>あなたの大親友として、自己肯定感を高めてくれるモード</p>
           </div>
         </div>
         <div className="mode-select" id="Lady" onClick={handleModeSelect}>
           <img src={Lady} />
           <div className='mode-select-text'>
             <h3>お嬢様</h3>
-            <p>あいうえおかきくけこさしすせそたちつてと</p>
+            <p>あなたの幼馴染として、励まして元気にしてくれるモード</p>
           </div>
         </div>
       </div>
