@@ -151,20 +151,31 @@ def ask_llama(chat: Chat):
     
 @app.post("/LLMReview")
 def ask_llama(chat: Chat):
-    #try:
-        # LLMによる今日1日のユーザーの行動に対する評価の文章を生成
     try:
         # プロンプトファイルを読み込み
         file_path = os.path.join(os.path.dirname(__file__), 'prompts/diary_prompt.txt')
         with open(file_path, 'r', encoding='utf-8') as file:
             prompt_data = json.load(file)
 
-        # プロンプトとユーザー入力を結合
-        prompt_instruction = prompt_data[0]["instruction"]
+        # プロンプトのバリデーション
+        if not isinstance(prompt_data, list) or not prompt_data:
+            raise ValueError("Invalid prompt format in diary_prompt.txt.")
+        instruction = prompt_data[0].get("instruction", "")
+        examples = prompt_data[0].get("examples", [])
+
+        if not instruction or not examples:
+            raise ValueError("Prompt file is missing 'instruction' or 'examples'.")
+
+        # ユーザーの行動を抽出
         user_messages = "\n".join([f"- {msg.text}" for msg in chat.messages if msg.role == "User"])
 
         # 完全なプロンプトの構築
-        full_prompt = f"{prompt_instruction}\n\n## ユーザーの行動\n{user_messages}\n\n## 総評:\n"
+        example_texts = "\n\n".join([
+            "### 行動内容:\n" + "\n".join(f"- {act}" for act in ex["action"]) + f"\n### 総評:\n{ex['summary']}"
+            for ex in examples
+        ])
+
+        full_prompt = f"{instruction}\n\n### 例:\n{example_texts}\n\n### ユーザーの行動:\n{user_messages}\n\n### 総評:"
         logger.debug(f"Generated Prompt: {full_prompt}")
 
         # Llamaサーバーへのリクエスト送信
@@ -181,7 +192,8 @@ def ask_llama(chat: Chat):
         logger.debug("Received response: " + json.dumps(response_json, ensure_ascii=False, indent=2))
 
         # 必要な部分を抽出
-        extracted_text = response_json.get("content", "").strip()
+        response_content = response_json.get("content", "").strip()
+        extracted_text = response_content.split("\n")[0]
         if not extracted_text:
             raise ValueError("Response content is empty.")
         
