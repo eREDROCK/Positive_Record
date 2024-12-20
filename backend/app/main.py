@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 @app.post("/llama")
 def ask_llama(prompt: Prompt):
     try:
-        logger.debug(f"Sending request to llamacpp-server with prompt: {prompt.prompt}")
+        logger.debug(f"aaaaaSending request to llamacpp-server with prompt: {prompt.prompt}")
         response = requests.post(
             "http://llamacpp-server:3300/completion",
             headers={"Content-Type": "application/json"},
