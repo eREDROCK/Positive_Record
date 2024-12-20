@@ -31,9 +31,6 @@ class Message(BaseModel):
 class Chat(BaseModel):
     messages: list[Message]
     mode: str
-class Diary(BaseModel):
-    instruction: str
-    user_input: List[str]
 
 # ログ設定
 logging.basicConfig(level=logging.DEBUG)
@@ -154,10 +151,44 @@ def ask_llama(chat: Chat):
     
 @app.post("/LLMReview")
 def ask_llama(chat: Chat):
+    #try:
+        # LLMによる今日1日のユーザーの行動に対する評価の文章を生成
     try:
-        # LLMによる今日1日のユーザーの行動に対する評価の文章を生成　
-        time.sleep(20)
-        return {"llm_review": "朝から家の掃除をするのは難しいことですね．そしてちゃんと授業にも出席できています．当たり前を当たり前にこなすことは難しいことですからね．"}
+        # プロンプトファイルを読み込み
+        file_path = os.path.join(os.path.dirname(__file__), 'prompts/diary_prompt.txt')
+        with open(file_path, 'r', encoding='utf-8') as file:
+            prompt_data = json.load(file)
+
+        # プロンプトとユーザー入力を結合
+        prompt_instruction = prompt_data[0]["instruction"]
+        user_messages = "\n".join([f"- {msg.text}" for msg in chat.messages if msg.role == "User"])
+
+        # 完全なプロンプトの構築
+        full_prompt = f"{prompt_instruction}\n\n## ユーザーの行動\n{user_messages}\n\n## 総評:\n"
+        logger.debug(f"Generated Prompt: {full_prompt}")
+
+        # Llamaサーバーへのリクエスト送信
+        response = requests.post(
+            "http://llamacpp-server:3300/completion",
+            headers={"Content-Type": "application/json"},
+            json={"prompt": full_prompt, "n_predict": 500},
+            timeout=150
+        )
+        response.raise_for_status()
+
+        # レスポンス処理
+        response_json = response.json()
+        logger.debug("Received response: " + json.dumps(response_json, ensure_ascii=False, indent=2))
+
+        # 必要な部分を抽出
+        extracted_text = response_json.get("content", "").strip()
+        if not extracted_text:
+            raise ValueError("Response content is empty.")
+        
+        # 総評を返却
+        return {"llm_review": extracted_text}
+        #time.sleep(20)
+        #return {"llm_review": "朝から家の掃除をするのは難しいことですね．そしてちゃんと授業にも出席できています．当たり前を当たり前にこなすことは難しいことですからね．"}
     except requests.exceptions.Timeout:
         logger.error("Request to llamacpp-server timed out")
         raise HTTPException(status_code=504, detail="Request to llamacpp-server timed out")
@@ -169,30 +200,89 @@ def ask_llama(chat: Chat):
         raise HTTPException(status_code=502, detail="Invalid JSON response from llamacpp-server")
     
 @app.post("/Diary")
-def ask_llama(diary: Diary):
+def ask_llama(chat: Chat):
     try:
-        # ユーザー入力を自然なテキスト形式に構築
-        prompt = f"{diary.instruction}\n\n"  # 指示部分
-        for item in diary.user_input:
-            prompt += f"- {item}\n"
+        # プロンプトファイルを読み込み
+        file_path = os.path.join(os.path.dirname(__file__), 'prompts/diary_prompt.txt')
+        with open(file_path, 'r', encoding='utf-8') as file:
+            prompt_data = json.load(file)
 
-        # llamacpp-server にリクエストを送信
+        # プロンプトとユーザー入力を結合
+        prompt_instruction = prompt_data[0]["instruction"]
+        user_messages = "\n".join([f"- {msg.text}" for msg in chat.messages])
+
+        # 完全なプロンプトの構築
+        full_prompt = f"{prompt_instruction}\n\n## ユーザーの行動\n{user_messages}\n\n## 総評:\n"
+        logger.debug(f"Generated Prompt: {full_prompt}")
+
+        # Llamaサーバーへのリクエスト送信
         response = requests.post(
             "http://llamacpp-server:3300/completion",
-            json={"prompt": prompt, "n_predict": 300},  # 300から100に減らす
-            #timeout=120
+            headers={"Content-Type": "application/json"},
+            json={"prompt": full_prompt, "n_predict": 400},
+            timeout=120
         )
         response.raise_for_status()
-        llama_response = response.json()
 
-        # レスポンス内容を取得
-        content = llama_response.get("content", "").strip()
+        # レスポンス処理
+        response_json = response.json()
+        logger.debug("Received response: " + json.dumps(response_json, ensure_ascii=False, indent=2))
 
-        if not content:
-            raise ValueError("Empty response from Llama server")
+        # 必要な部分を抽出
+        extracted_text = response_json.get("content", "").strip()
+        if not extracted_text:
+            raise ValueError("Response content is empty.")
 
-        return {"diary": content}
+        # 総評を返却
+        return {"summary": extracted_text}
+    
+        '''file_path = os.path.join(os.path.dirname(__file__), 'prompts/diary_prompt.txt')
+        # chatPrompt.txtを読み込む
+        with open(file_path, 'r', encoding='utf-8') as file:
+            prompt_data = json.load(file)
 
+        # Messageオブジェクトを辞書に変換する関数
+        def messageObj_to_dict(message):
+            return {
+                "role": message.role,
+                "text": message.text
+            }
+
+        # chat.messagesの各Messageオブジェクトを辞書型に変換
+        chat_messages_dict = [messageObj_to_dict(message) for message in chat.messages]
+        
+        # txtから読み込んだプロンプトとフロントエンドからの入力を結合
+        chat.messages=prompt_data+chat_messages_dict
+        message_txt=""
+        for message in chat.messages:
+            if message['role'] == "User":
+                message_txt= message_txt + message["text"] + "\n"
+            else:
+                message_txt= message_txt + "A: "+ message["text"] + "\n"
+        message_txt=message_txt+"A: "
+
+        #logger.debug(f"prompt: {message_txt}")
+
+        # lamacpp-serverにプロンプトを送信
+        response = requests.post(
+            "http://llamacpp-server:3300/completion",
+            headers={"Content-Type": "application/json"},
+            json={"prompt": str(message_txt), "n_predict": 200},
+            #timeout=90,  # タイムアウトを90秒に設定
+            proxies={"http": None, "https": None}  # プロキシを無効にする
+        )
+        response.raise_for_status()  # ステータスコードが200番台でない場合に例外を発生させる
+        logger.debug(f"Received response from llamacpp-server: {response.text}")
+
+        # レスポンスのcontentの文字列の最初の改行までを取得(Userへの返答文のみ取得)
+        response_json = response.json()
+        response_content = response_json.get("content", "")
+        # レスポンスのcontentの文字列の最初の改行までを取得
+        extracted_text = response_content.split("\n")[0]
+
+        #return {"original_response": response.json(), "extracted_text": extracted_text}
+        return {"総評:" + extracted_text}
+    '''
     except requests.exceptions.Timeout:
         logger.error("Request to llamacpp-server timed out")
         raise HTTPException(status_code=504, detail="Request to llamacpp-server timed out")
@@ -205,3 +295,19 @@ def ask_llama(diary: Diary):
     except Exception as e:
         logger.error(f"Unhandled exception: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+'''
+2024-12-18 19:53:44 DEBUG:app.main:prompt: 
+                    A: 私はUserの上司であるAssistantです．私はUserとの会話の中でUserがやったことを褒め，Userの自己肯定感を高めます．今日あなたが頑張ったことは何ですか？
+2024-12-18 19:53:44 今日はまず9時に起き，家の掃除を終わらせてから学校に向かいました．
+2024-12-18 19:53:44 A: 朝から活動できると生産性が上がるんですよね．今後も継続していきましょう．他には何をしましたか？
+2024-12-18 19:53:44 学校では自分の専攻分野であるAIの研究をしました．集中していたら5時間が経過していました．
+2024-12-18 19:53:44 A: 素晴らしいですね．我が社でもぜひそのスキルを活かして役立ってほしいですね．他には何をしましたか？
+2024-12-18 19:53:44 今日は頼まれていたタスクを一通り終わらせてきました．
+2024-12-18 19:53:44 A: 全てですか？さすが期待のエースですね．今後が楽しみです．他には何かしましたか？
+2024-12-18 19:53:44 A: 今日はとても良い天気でした。
+2024-12-18 19:53:44 A: 公園で散歩をしました。
+2024-12-18 19:53:44 A: 夕食は美味しいパスタを食べました。
+2024-12-18 19:53:44 A: 
+'''
+
