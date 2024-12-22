@@ -8,6 +8,7 @@ import json
 import  re
 import os
 import time
+from . import diary
 
 app = FastAPI()
 
@@ -136,8 +137,7 @@ def ask_llama(chat: Chat):
 def ask_llama(chat: Chat):
     try:
         # ユーザーの入力を元にLLMを使わずに日記を生成する　
-        time.sleep(5)
-        return {"user_diary": "今日は家の掃除をした．次に授業に出席した．"}
+        return {"user_diary": diary.generate_diary(chat.messages)}
     except requests.exceptions.Timeout:
         logger.error("Request to llamacpp-server timed out")
         raise HTTPException(status_code=504, detail="Request to llamacpp-server timed out")
