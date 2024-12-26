@@ -210,8 +210,7 @@ def ask_llama(chat: Chat):
         
         # 総評を返却
         return {"llm_review": extracted_text}
-        #time.sleep(20)
-        #return {"llm_review": "朝から家の掃除をするのは難しいことですね．そしてちゃんと授業にも出席できています．当たり前を当たり前にこなすことは難しいことですからね．"}
+        
     except requests.exceptions.Timeout:
         logger.error("Request to llamacpp-server timed out")
         raise HTTPException(status_code=504, detail="Request to llamacpp-server timed out")
