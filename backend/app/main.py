@@ -152,19 +152,30 @@ def ask_llama(chat: Chat):
 @app.post("/LLMReview")
 def ask_llama(chat: Chat):
     try:
-        # プロンプトファイルを読み込み
         file_path = os.path.join(os.path.dirname(__file__), 'prompts/diary_prompt.txt')
+
+        if chat.mode =="Boss":
+            file_path = os.path.join(os.path.dirname(__file__), 'prompts/boss_review_prompt.txt')
+        elif chat.mode =="Friend":
+            file_path = os.path.join(os.path.dirname(__file__), 'prompts/friend_review_prompt.txt')
+        elif chat.mode =="Commander":
+            file_path = os.path.join(os.path.dirname(__file__), 'prompts/commander_review_prompt.txt')
+        elif chat.mode =="Lady":
+            file_path = os.path.join(os.path.dirname(__file__), 'prompts/lady_review_prompt.txt')
+        # プロンプトファイルを読み込み
+
+        #file_path = os.path.join(os.path.dirname(__file__), 'prompts/diary_prompt.txt')
         with open(file_path, 'r', encoding='utf-8') as file:
             prompt_data = json.load(file)
 
         # プロンプトのバリデーション
         if not isinstance(prompt_data, list) or not prompt_data:
-            raise ValueError("Invalid prompt format in diary_prompt.txt.")
+            raise HTTPException(status_code=400, detail="Invalid prompt format in diary_prompt.txt")
         instruction = prompt_data[0].get("instruction", "")
         examples = prompt_data[0].get("examples", [])
 
         if not instruction or not examples:
-            raise ValueError("Prompt file is missing 'instruction' or 'examples'.")
+            raise HTTPException(status_code=400, detail="Prompt file is missing 'instruction' or 'examples'.")
 
         # ユーザーの行動を抽出
         user_messages = "\n".join([f"- {msg.text}" for msg in chat.messages if msg.role == "User"])
@@ -182,7 +193,7 @@ def ask_llama(chat: Chat):
         response = requests.post(
             "http://llamacpp-server:3300/completion",
             headers={"Content-Type": "application/json"},
-            json={"prompt": full_prompt, "n_predict": 500},
+            json={"prompt": full_prompt, "n_predict": -1},
             timeout=150
         )
         response.raise_for_status()
