@@ -107,8 +107,8 @@ def ask_llama(chat: Chat):
         response = requests.post(
             "http://llamacpp-server:3300/completion",
             headers={"Content-Type": "application/json"},
-            json={"prompt": str(message_txt), "n_predict": 200},
-            timeout=90,  # タイムアウトを90秒に設定
+            json={"prompt": str(message_txt), "n_predict": -1},
+            timeout=180,  # タイムアウトを90秒に設定
             proxies={"http": None, "https": None}  # プロキシを無効にする
         )
         response.raise_for_status()  # ステータスコードが200番台でない場合に例外を発生させる
@@ -125,7 +125,8 @@ def ask_llama(chat: Chat):
     # 例外処理
     except requests.exceptions.Timeout:
         logger.error("Request to llamacpp-server timed out")
-        raise HTTPException(status_code=504, detail="Request to llamacpp-server timed out")
+        return {"original_response": "タイムアウト", "extracted_text": "素晴らしいですね，"}
+        # raise HTTPException(status_code=504, detail="Request to llamacpp-server timed out")
     except requests.exceptions.RequestException as e:
         logger.error(f"RequestException: {e}")
         raise HTTPException(status_code=500, detail="Service unavailable or request failed")
@@ -194,7 +195,7 @@ def ask_llama(chat: Chat):
             "http://llamacpp-server:3300/completion",
             headers={"Content-Type": "application/json"},
             json={"prompt": full_prompt, "n_predict": -1},
-            timeout=150
+            timeout=180
         )
         response.raise_for_status()
 
