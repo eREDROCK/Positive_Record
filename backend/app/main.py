@@ -2,6 +2,7 @@ from typing import Union
 from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from typing import List
 import requests
 import logging
 import json
@@ -74,7 +75,7 @@ def ask_llama(chat: Chat):
             file_path = os.path.join(os.path.dirname(__file__), 'prompts/commander_prompt.txt')
         elif chat.mode =="Lady":
             file_path = os.path.join(os.path.dirname(__file__), 'prompts/lady_prompt.txt')
- 
+
 
         # chatPrompt.txtを読み込む
         with open(file_path, 'r', encoding='utf-8') as file:
@@ -151,9 +152,65 @@ def ask_llama(chat: Chat):
 @app.post("/LLMReview")
 def ask_llama(chat: Chat):
     try:
-        # LLMによる今日1日のユーザーの行動に対する評価の文章を生成　
-        time.sleep(20)
-        return {"llm_review": "朝から家の掃除をするのは難しいことですね．そしてちゃんと授業にも出席できています．当たり前を当たり前にこなすことは難しいことですからね．"}
+        file_path = os.path.join(os.path.dirname(__file__), 'prompts/diary_prompt.txt')
+
+        if chat.mode =="Boss":
+            file_path = os.path.join(os.path.dirname(__file__), 'prompts/boss_review_prompt.txt')
+        elif chat.mode =="Friend":
+            file_path = os.path.join(os.path.dirname(__file__), 'prompts/friend_review_prompt.txt')
+        elif chat.mode =="Commander":
+            file_path = os.path.join(os.path.dirname(__file__), 'prompts/commander_review_prompt.txt')
+        elif chat.mode =="Lady":
+            file_path = os.path.join(os.path.dirname(__file__), 'prompts/lady_review_prompt.txt')
+        # プロンプトファイルを読み込み
+
+        #file_path = os.path.join(os.path.dirname(__file__), 'prompts/diary_prompt.txt')
+        with open(file_path, 'r', encoding='utf-8') as file:
+            prompt_data = json.load(file)
+
+        # プロンプトのバリデーション
+        if not isinstance(prompt_data, list) or not prompt_data:
+            raise HTTPException(status_code=400, detail="Invalid prompt format in diary_prompt.txt")
+        instruction = prompt_data[0].get("instruction", "")
+        examples = prompt_data[0].get("examples", [])
+
+        if not instruction or not examples:
+            raise HTTPException(status_code=400, detail="Prompt file is missing 'instruction' or 'examples'.")
+
+        # ユーザーの行動を抽出
+        user_messages = "\n".join([f"- {msg.text}" for msg in chat.messages if msg.role == "User"])
+
+        # 完全なプロンプトの構築
+        example_texts = "\n\n".join([
+            "### 行動内容:\n" + "\n".join(f"- {act}" for act in ex["action"]) + f"\n### 総評:\n{ex['summary']}"
+            for ex in examples
+        ])
+
+        full_prompt = f"{instruction}\n\n### 例:\n{example_texts}\n\n### ユーザーの行動:\n{user_messages}\n\n### 総評:"
+        logger.debug(f"Generated Prompt: {full_prompt}")
+
+        # Llamaサーバーへのリクエスト送信
+        response = requests.post(
+            "http://llamacpp-server:3300/completion",
+            headers={"Content-Type": "application/json"},
+            json={"prompt": full_prompt, "n_predict": -1},
+            timeout=150
+        )
+        response.raise_for_status()
+
+        # レスポンス処理
+        response_json = response.json()
+        logger.debug("Received response: " + json.dumps(response_json, ensure_ascii=False, indent=2))
+
+        # 必要な部分を抽出
+        response_content = response_json.get("content", "").strip()
+        extracted_text = response_content.split("\n")[0]
+        if not extracted_text:
+            raise ValueError("Response content is empty.")
+        
+        # 総評を返却
+        return {"llm_review": extracted_text}
+        
     except requests.exceptions.Timeout:
         logger.error("Request to llamacpp-server timed out")
         raise HTTPException(status_code=504, detail="Request to llamacpp-server timed out")
