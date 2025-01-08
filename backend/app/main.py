@@ -214,7 +214,8 @@ def ask_llama(chat: Chat):
         
     except requests.exceptions.Timeout:
         logger.error("Request to llamacpp-server timed out")
-        raise HTTPException(status_code=504, detail="Request to llamacpp-server timed out")
+        return {"llm_review": "よく頑張ったね！今日も1日お疲れ様でした！"} 
+        #raise HTTPException(status_code=504, detail="Request to llamacpp-server timed out")
     except requests.exceptions.RequestException as e:
         logger.error(f"RequestException: {e}")
         raise HTTPException(status_code=500, detail="Service unavailable or request failed")
