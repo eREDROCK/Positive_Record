@@ -118,6 +118,17 @@ init_verbs(verb_list)
 init_adjs(adj_list)
 csv_file.close()
 
+def split_sentence(input):
+    sentences = []
+    for moji in input:
+        if moji == "." or moji == "。" or moji == "．":
+            sentences.append(input.split(moji,1)[0])
+            sentences.extend(split_sentence(input.split(moji,1)[1]))
+            break
+    if len(sentences) == 0 and len(input) > 2:
+        sentences.append(input)
+    return sentences
+
 def generate_diary(messages):
     user_diary = ""
     diary_sentences = []
@@ -129,12 +140,8 @@ def generate_diary(messages):
         if message.role == "User":
             user_inputs.append(message.text)
     for user_input in user_inputs:
-        sentences.append(user_input)
-        for moji in user_input:
-            if moji == "." or moji == "。" or moji == "．":
-                sentences = user_input.split(moji)
-        if len(sentences[-1]) < 2:
-            sentences.pop()
+        sentences.clear()
+        sentences = split_sentence(user_input)
         for sentence in sentences : 
             morpheme_list.clear()
             diary_sentence = ""
@@ -152,5 +159,6 @@ def generate_diary(messages):
                 diary_sentence += morpheme_list[k].surface
             diary_sentences.append(diary_sentence + "。")
             user_diary += diary_sentence + "。"
+
     print(user_diary)
     return user_diary
