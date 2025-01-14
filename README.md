@@ -17,8 +17,8 @@ LLMの機能のみを持つLLMサーバー
 以下に手順をまとめます．
 
 - ルートディレクトリにmodelsフォルダを追加
-- 追加したmodelsフォルダに任意のGGUF形式のモデルを配置(モデルはこの[リンク](https://huggingface.co/TheBloke)から探して下さい)
-- 現在使っている日本語モデルはこれ[リンク](https://huggingface.co/mmnga/ELYZA-japanese-Llama-2-7b-instruct-gguf)
+- 追加したmodelsフォルダに任意のGGUF形式のモデルを配置(モデルは[こちら](https://huggingface.co/TheBloke)から探して下さい)
+- 現在使っている日本語モデルは[こちら](https://huggingface.co/TheBloke/calm2-7B-chat-GGUF?show_file_info=calm2-7b-chat.Q2_K.gguf)
 - .envのMODEL_NAMEをダウンロードしたモデル名に変更
 ## 起動方法
 - ルートディレクトリに移動
